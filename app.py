@@ -81,7 +81,6 @@ def start_ffmpeg(path, source_url):
     # Mengubah audio menjadi AAC (transcode audio) memakan CPU <1% namun menjamin 100% kompatibel dengan HLS/VLC. Video tetap copy.
     cmd = [
         "ffmpeg", "-y", 
-        "-fflags", "nobuffer", "-flags", "low_delay",
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "-i", source_url,
@@ -312,7 +311,7 @@ def proxy_hls(path: str, filename: str, request: Request):
         else:
             headers["Content-Type"] = "application/octet-stream"
             
-        return StreamingResponse(iterfile(), headers=headers)
+        return StreamingResponse(iterfile(), headers=headers, status_code=r.status_code)
     except Exception as e:
         return {"error": str(e)}
 
