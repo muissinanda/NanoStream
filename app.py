@@ -55,14 +55,14 @@ def start_ffmpeg(path, source_url):
         processes[path].wait()
     
     # Using ffmpeg to pull TS/RTSP/RTMP and push to local MediaMTX
-    # Changed to push via RTSP because FLV/RTMP doesn't support some IPTV codecs (like H.265 or AC3/MPEG audio)
-    # Added reconnect flags and User-Agent to bypass IPTV blocks
+    # Ditambahkan filter -bsf:a aac_adtstoasc untuk memperbaiki error "AAC with no global headers"
     cmd = [
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "-i", source_url,
         "-c:v", "copy", "-c:a", "copy", 
+        "-bsf:a", "aac_adtstoasc",
         "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
     ]
     
