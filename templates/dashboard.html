@@ -164,7 +164,7 @@
                     <div class="space-y-2 mb-5">
                         <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden group">
                             <span class="text-[10px] font-bold bg-brand-500/20 text-brand-300 px-2 py-1.5 w-14 text-center shrink-0">HLS</span>
-                            <input type="text" id="hls-url-{{ path }}" readonly value="http://{{ local_ip }}:8888/{{ path }}/index.m3u8" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                            <input type="text" id="hls-url-{{ path }}" readonly value="https://{{ local_ip }}/hls/{{ path }}/index.m3u8" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
                             <button onclick="copyToClipboard('hls-url-{{ path }}')" class="p-1.5 text-gray-400 hover:text-brand-400 opacity-50 group-hover:opacity-100 transition-opacity" title="Copy">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             </button>
@@ -234,14 +234,23 @@
             var copyText = document.getElementById(elementId);
             copyText.select();
             copyText.setSelectionRange(0, 99999); // Untuk mobile
-            navigator.clipboard.writeText(copyText.value);
             
-            // Show toast
-            const toast = document.getElementById('toast');
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 2000);
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(copyText.value);
+                } else {
+                    document.execCommand('copy');
+                }
+                
+                // Show toast
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 2000);
+            } catch (err) {
+                alert("Gagal menyalin text, browser anda tidak mendukung.");
+            }
         }
 
         // Edit Modal Logic
@@ -278,17 +287,21 @@
         function updateAllUrls() {
             const domain = document.getElementById('display_domain').value || '127.0.0.1';
             
+            // Deklarasikan variabel diluar loop jinja agar tidak error SyntaxError redeclaration
+            let protocol = domain.includes('https://') ? '' : (domain.includes('http://') ? '' : 'https://');
+            let cleanDomain = domain.replace('http://', '').replace('https://', '');
+            let rtmpDomain = cleanDomain.split(':')[0]; // remove port if exists
+            
             {% for path, ch in channels.items() %}
-                // Pastikan menggunakan https:// jika diakses melalui Cloudflare
-                let protocol = domain.includes('https://') ? '' : (domain.includes('http://') ? '' : 'https://');
-                let cleanDomain = domain.replace('http://', '').replace('https://', '');
-                
                 // Gunakan rute Reverse Proxy HLS bawaan NanoStreamer agar bypass Cloudflare Tunnel
-                document.getElementById('hls-url-{{ path }}').value = `${protocol}${cleanDomain}/hls/{{ path }}/index.m3u8`;
+                if (document.getElementById('hls-url-{{ path }}')) {
+                    document.getElementById('hls-url-{{ path }}').value = `${protocol}${cleanDomain}/hls/{{ path }}/index.m3u8`;
+                }
                 
                 // RTMP tidak bisa lewat Cloudflare, tetap biarkan pakai port 1935 (harus pakai IP Publik VPS asli)
-                let rtmpDomain = cleanDomain.split(':')[0]; // remove port if exists
-                document.getElementById('rtmp-url-{{ path }}').value = `rtmp://${rtmpDomain}:1935/{{ path }}`;
+                if (document.getElementById('rtmp-url-{{ path }}')) {
+                    document.getElementById('rtmp-url-{{ path }}').value = `rtmp://${rtmpDomain}:1935/{{ path }}`;
+                }
             {% endfor %}
         }
         
