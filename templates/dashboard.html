@@ -12,9 +12,7 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' }
-                    }
+                    colors: { brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' } }
                 }
             }
         }
@@ -32,22 +30,21 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body class="text-gray-100 min-h-screen font-sans selection:bg-brand-500 selection:text-white">
+<body class="text-gray-100 min-h-screen font-sans selection:bg-brand-500 selection:text-white pb-12">
 
     <!-- Top Navigation -->
-    <nav class="glass-card sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-2xl">
+    <nav class="glass-card sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-2xl mb-8">
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">NanoStreamer</h1>
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">NanoStreamer <span class="text-xs font-normal text-brand-400 ml-2 border border-brand-500/30 px-2 py-0.5 rounded-full bg-brand-500/10">Multi-Channel</span></h1>
         </div>
         <a href="/logout" class="flex items-center space-x-2 bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent hover:border-red-500/30">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -55,168 +52,139 @@
         </a>
     </nav>
 
-    <div class="container mx-auto px-4 py-8 grid grid-cols-1 xl:grid-cols-3 gap-8">
+    <div class="container mx-auto px-4 space-y-8">
         
-        <!-- Left Column: Controls & URLs -->
-        <div class="xl:col-span-1 space-y-6">
-            
-            <!-- Control Card -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl relative overflow-hidden group">
-                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-brand-500/10 blur-3xl group-hover:bg-brand-500/20 transition-all"></div>
-                
-                <h2 class="text-lg font-semibold text-white mb-6 flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span>Stream Engine</span>
+        <!-- Top Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-blue-500 relative overflow-hidden">
+                <p class="text-gray-400 text-sm font-medium mb-1">Total Viewers</p>
+                <p class="text-4xl font-black text-white" id="stat-viewers">0 <span class="text-lg text-blue-400 font-medium">Users</span></p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-emerald-500 relative overflow-hidden">
+                <p class="text-gray-400 text-sm font-medium mb-1">CPU Load</p>
+                <p class="text-4xl font-black text-white" id="stat-cpu">0<span class="text-2xl text-emerald-400">%</span></p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-amber-500 relative overflow-hidden">
+                <p class="text-gray-400 text-sm font-medium mb-1">RAM Usage</p>
+                <p class="text-4xl font-black text-white" id="stat-ram">0<span class="text-2xl text-amber-400">%</span></p>
+            </div>
+        </div>
+
+        <!-- Middle Row: Add Channel & Global Chart -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <!-- Add Channel Form -->
+            <div class="xl:col-span-1 glass-card p-6 rounded-2xl shadow-xl relative overflow-hidden">
+                <h2 class="text-lg font-semibold text-white mb-5 flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>Add New Channel</span>
                 </h2>
                 
-                <div class="flex items-center space-x-4 mb-8 bg-black/20 p-4 rounded-xl border border-white/5">
-                    <div id="status-indicator" class="relative flex h-5 w-5">
-                      {% if is_running %}
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
-                      {% else %}
-                        <span class="relative inline-flex rounded-full h-5 w-5 bg-gray-500"></span>
-                      {% endif %}
+                <form action="/api/channel/add" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 mb-1 text-xs font-medium">Channel Name</label>
+                        <input type="text" name="name" placeholder="e.g. HBO HD" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-brand-500 text-sm" required>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Engine Status</p>
-                        <span id="status-text" class="text-lg font-bold text-white tracking-wide">{% if is_running %}LIVE (Routing){% else %}OFFLINE{% endif %}</span>
+                        <label class="block text-gray-400 mb-1 text-xs font-medium">Path (ID)</label>
+                        <input type="text" name="path" placeholder="e.g. hbo (no spaces)" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-brand-500 text-sm" required>
                     </div>
-                </div>
-
-                <form action="{% if is_running %}/api/stream/stop{% else %}/api/stream/start{% endif %}" method="POST">
-                    <div class="mb-5">
-                        <label class="block text-gray-400 mb-2 text-sm font-medium">Source URL (RTMP/RTSP)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                            </div>
-                            <input type="text" name="input_url" value="{{ active_input }}" placeholder="rtmp://camera.local/live..." 
-                                class="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-gray-600" 
-                                {% if is_running %}readonly{% else %}required{% endif %}>
-                        </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1 text-xs font-medium">Source URL (.ts, m3u8, rtmp)</label>
+                        <input type="text" name="source_url" placeholder="http://.../live.php?mac=...&extension=ts" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-brand-500 text-sm" required>
                     </div>
-                    
-                    {% if is_running %}
-                    <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-red-500/25 flex justify-center items-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg>
-                        <span>Stop Stream</span>
+                    <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-blue-600 hover:from-brand-400 hover:to-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex justify-center items-center space-x-2 mt-4">
+                        <span>Add Channel</span>
                     </button>
-                    {% else %}
-                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/25 flex justify-center items-center space-x-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>Start Routing</span>
-                    </button>
-                    {% endif %}
                 </form>
             </div>
 
-            <!-- Output Playback Links -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl">
-                <h2 class="text-lg font-semibold text-white mb-2 flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                    <span>Playback URLs</span>
-                </h2>
-                <p class="text-sm text-gray-400 mb-5">Gunakan link ini untuk player eksternal.</p>
-                
-                <div class="space-y-4">
-                    <!-- HLS -->
-                    <div class="group relative">
-                        <div class="flex justify-between items-end mb-1">
-                            <label class="text-xs text-brand-400 font-semibold uppercase tracking-wide">HLS (.m3u8)</label>
-                            <span class="text-[10px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded">OTT Navigator</span>
-                        </div>
-                        <input type="text" readonly value="{{ hls_url }}" onclick="this.select()" class="w-full bg-black/30 border border-white/5 text-gray-300 rounded-lg p-2.5 text-sm cursor-copy hover:border-brand-500/50 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500">
-                    </div>
-                    <!-- RTMP -->
-                    <div class="group relative">
-                        <div class="flex justify-between items-end mb-1">
-                            <label class="text-xs text-purple-400 font-semibold uppercase tracking-wide">RTMP</label>
-                            <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">VLC Player</span>
-                        </div>
-                        <input type="text" readonly value="{{ rtmp_url }}" onclick="this.select()" class="w-full bg-black/30 border border-white/5 text-gray-300 rounded-lg p-2.5 text-sm cursor-copy hover:border-purple-500/50 transition-colors focus:outline-none focus:ring-1 focus:ring-purple-500">
-                    </div>
-                    <!-- RTSP -->
-                    <div class="group relative">
-                        <div class="flex justify-between items-end mb-1">
-                            <label class="text-xs text-gray-400 font-semibold uppercase tracking-wide">RTSP</label>
-                        </div>
-                        <input type="text" readonly value="{{ rtsp_url }}" onclick="this.select()" class="w-full bg-black/30 border border-white/5 text-gray-300 rounded-lg p-2.5 text-sm cursor-copy hover:border-gray-400/50 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-500">
-                    </div>
+            <!-- Resource Chart -->
+            <div class="xl:col-span-2 glass-card p-6 rounded-2xl shadow-xl">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-semibold text-white">Server Resources</h2>
                 </div>
-            </div>
-
-        </div>
-
-        <!-- Right Column: Metrics & Charts -->
-        <div class="xl:col-span-2 space-y-6">
-            
-            <!-- Quick Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Viewers -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-blue-500 relative overflow-hidden">
-                    <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-blue-500/10" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
-                    <p class="text-gray-400 text-sm font-medium mb-1 relative z-10">Penonton Aktif</p>
-                    <div class="flex items-end space-x-2 relative z-10">
-                        <p class="text-4xl font-black text-white tracking-tight" id="stat-viewers">0</p>
-                        <p class="text-sm text-blue-400 font-medium pb-1">Users</p>
-                    </div>
-                </div>
-                <!-- CPU -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-emerald-500 relative overflow-hidden">
-                    <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-500/10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1h2a1 1 0 011 1v1h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v1a1 1 0 01-1 1h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a1 1 0 01-1-1v-1H3a1 1 0 110-2h1V9H3a1 1 0 110-2h1V6a1 1 0 011-1h2V4a1 1 0 011-1h2zm-1 4H6v8h8V6H9z" clip-rule="evenodd"/></svg>
-                    <p class="text-gray-400 text-sm font-medium mb-1 relative z-10">CPU Load</p>
-                    <div class="flex items-end space-x-2 relative z-10">
-                        <p class="text-4xl font-black text-white tracking-tight" id="stat-cpu">0<span class="text-2xl text-emerald-400">%</span></p>
-                    </div>
-                </div>
-                <!-- RAM -->
-                <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-amber-500 relative overflow-hidden">
-                    <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-amber-500/10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clip-rule="evenodd"/></svg>
-                    <p class="text-gray-400 text-sm font-medium mb-1 relative z-10">RAM Usage</p>
-                    <div class="flex items-end space-x-2 relative z-10">
-                        <p class="text-4xl font-black text-white tracking-tight" id="stat-ram">0<span class="text-2xl text-amber-400">%</span></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Resource Monitor Chart -->
-            <div class="glass-card p-6 rounded-2xl shadow-xl">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        <span>Resource Monitor</span>
-                    </h2>
-                    <div class="flex items-center space-x-4 text-xs font-medium">
-                        <div class="flex items-center space-x-1">
-                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                            <span class="text-gray-400">CPU</span>
-                        </div>
-                        <div class="flex items-center space-x-1">
-                            <span class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
-                            <span class="text-gray-400">RAM</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="relative h-[300px] w-full">
+                <div class="relative h-[240px] w-full">
                     <canvas id="resourceChart"></canvas>
                 </div>
             </div>
+        </div>
+
+        <!-- Channels Grid -->
+        <div>
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-2">Active Channels ({{ channels|length }})</h2>
             
+            <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+                {% for path, ch in channels.items() %}
+                <div class="glass-card p-5 rounded-2xl shadow-lg relative group border-t-2 {% if ch.is_active %}border-t-emerald-500{% else %}border-t-gray-600{% endif %}">
+                    
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+                                <span>{{ ch.name }}</span>
+                                <span class="text-xs px-2 py-0.5 rounded bg-white/10 text-gray-300">/{{ ch.path }}</span>
+                            </h3>
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span id="status-ind-{{ path }}" class="relative flex h-3 w-3">
+                                  {% if ch.is_active %}
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                  {% else %}
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-gray-500"></span>
+                                  {% endif %}
+                                </span>
+                                <span id="status-txt-{{ path }}" class="text-xs font-semibold {% if ch.is_active %}text-emerald-400{% else %}text-gray-400{% endif %}">
+                                    {% if ch.is_active %}LIVE{% else %}OFFLINE{% endif %}
+                                </span>
+                                <span class="text-gray-600 text-xs">•</span>
+                                <span class="text-xs text-blue-300 font-medium"><span id="viewers-{{ path }}">0</span> Viewers</span>
+                            </div>
+                        </div>
+                        
+                        <a href="/api/channel/delete/{{ path }}" class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors" title="Delete Channel" onclick="return confirm('Hapus channel {{ ch.name }}?');">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </a>
+                    </div>
+
+                    <div class="bg-black/30 p-3 rounded-lg mb-4">
+                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Source (Input)</p>
+                        <p class="text-xs text-gray-300 truncate" title="{{ ch.source }}">{{ ch.source }}</p>
+                    </div>
+
+                    <div class="space-y-2 mb-5">
+                        <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden">
+                            <span class="text-[10px] font-bold bg-brand-500/20 text-brand-300 px-2 py-1.5 w-14 text-center shrink-0">HLS</span>
+                            <input type="text" readonly value="http://{{ local_ip }}:8888/{{ path }}/index.m3u8" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                        </div>
+                        <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden">
+                            <span class="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-2 py-1.5 w-14 text-center shrink-0">RTMP</span>
+                            <input type="text" readonly value="rtmp://{{ local_ip }}:1935/{{ path }}" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        {% if ch.is_active %}
+                        <a href="/api/channel/stop/{{ path }}" class="w-full text-center bg-red-500/20 hover:bg-red-500 border border-red-500/50 hover:border-red-500 text-red-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all">Stop Stream</a>
+                        {% else %}
+                        <a href="/api/channel/start/{{ path }}" class="w-full text-center bg-emerald-500/20 hover:bg-emerald-500 border border-emerald-500/50 hover:border-emerald-500 text-emerald-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all">Start Stream</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-full py-12 text-center text-gray-500 bg-white/5 rounded-2xl border border-white/10 border-dashed">
+                    <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                    <p>Belum ada channel. Silakan tambahkan channel baru di form atas.</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
     <script>
-        // Setup Chart
         const ctx = document.getElementById('resourceChart').getContext('2d');
-        
-        // Create Gradients for Chart
-        const cpuGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        const cpuGradient = ctx.createLinearGradient(0, 0, 0, 240);
         cpuGradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
         cpuGradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-        
-        const ramGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        const ramGradient = ctx.createLinearGradient(0, 0, 0, 240);
         ramGradient.addColorStop(0, 'rgba(245, 158, 11, 0.4)');
         ramGradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
 
@@ -226,58 +194,19 @@
         const resourceChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: Array(25).fill(''),
+                labels: Array(20).fill(''),
                 datasets: [
-                    {
-                        label: 'CPU (%)',
-                        borderColor: '#10b981',
-                        backgroundColor: cpuGradient,
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        pointHoverRadius: 4,
-                        data: Array(25).fill(0),
-                        fill: true,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'RAM (%)',
-                        borderColor: '#f59e0b',
-                        backgroundColor: ramGradient,
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        pointHoverRadius: 4,
-                        data: Array(25).fill(0),
-                        fill: true,
-                        tension: 0.4
-                    }
+                    { label: 'CPU (%)', borderColor: '#10b981', backgroundColor: cpuGradient, borderWidth: 2, pointRadius: 0, data: Array(20).fill(0), fill: true, tension: 0.4 },
+                    { label: 'RAM (%)', borderColor: '#f59e0b', backgroundColor: ramGradient, borderWidth: 2, pointRadius: 0, data: Array(20).fill(0), fill: true, tension: 0.4 }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 400 },
-                interaction: { mode: 'index', intersect: false },
+                responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
                 scales: {
-                    y: { 
-                        min: 0, max: 100, 
-                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-                        ticks: { callback: function(value) { return value + '%' } }
-                    },
+                    y: { min: 0, max: 100, grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false } },
                     x: { grid: { display: false, drawBorder: false } }
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        titleColor: '#fff',
-                        bodyColor: '#cbd5e1',
-                        borderColor: 'rgba(255, 255, 255, 0.1)',
-                        borderWidth: 1,
-                        padding: 10,
-                        displayColors: true,
-                        boxPadding: 4
-                    }
-                }
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
             }
         });
 
@@ -286,40 +215,41 @@
             try {
                 const res = await fetch('/api/metrics');
                 const data = await res.json();
-
                 if(data.error) return;
 
-                // Animate Numbers (Simple direct update for now)
+                // Update Stats
                 document.getElementById('stat-cpu').innerHTML = data.cpu + '<span class="text-2xl text-emerald-400">%</span>';
                 document.getElementById('stat-ram').innerHTML = data.ram + '<span class="text-2xl text-amber-400">%</span>';
-                document.getElementById('stat-viewers').innerText = data.viewers;
+                document.getElementById('stat-viewers').innerHTML = data.total_viewers + ' <span class="text-lg text-blue-400 font-medium">Users</span>';
 
-                // Update Chart smoothly
-                resourceChart.data.datasets[0].data.shift();
-                resourceChart.data.datasets[0].data.push(data.cpu);
-                resourceChart.data.datasets[1].data.shift();
-                resourceChart.data.datasets[1].data.push(data.ram);
-                resourceChart.update('none'); // use 'none' for smooth stream feel without jumping
+                // Chart
+                resourceChart.data.datasets[0].data.shift(); resourceChart.data.datasets[0].data.push(data.cpu);
+                resourceChart.data.datasets[1].data.shift(); resourceChart.data.datasets[1].data.push(data.ram);
+                resourceChart.update('none');
 
-                // Update Status Badge
-                const indicator = document.getElementById('status-indicator');
-                const statText = document.getElementById('status-text');
-                if(data.is_running) {
-                    indicator.innerHTML = `
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
-                    `;
-                    statText.innerText = "LIVE (Routing)";
-                    statText.className = "text-lg font-bold text-emerald-400 tracking-wide";
-                } else {
-                    indicator.innerHTML = `<span class="relative inline-flex rounded-full h-5 w-5 bg-gray-600"></span>`;
-                    statText.innerText = "OFFLINE";
-                    statText.className = "text-lg font-bold text-gray-500 tracking-wide";
+                // Channels Real-time Updates (Status & Viewers)
+                for (const [path, stats] of Object.entries(data.channels)) {
+                    const viewerEl = document.getElementById(`viewers-${path}`);
+                    if(viewerEl) viewerEl.innerText = stats.viewers;
+
+                    // Note: We only update viewers dynamically without refreshing the page. 
+                    // Start/Stop status triggers a page reload naturally, but we can sync the UI just in case.
+                    const ind = document.getElementById(`status-ind-${path}`);
+                    const txt = document.getElementById(`status-txt-${path}`);
+                    if(ind && txt) {
+                        if(stats.is_running) {
+                            ind.innerHTML = `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>`;
+                            txt.className = "text-xs font-semibold text-emerald-400";
+                            txt.innerText = "LIVE";
+                        } else {
+                            ind.innerHTML = `<span class="relative inline-flex rounded-full h-3 w-3 bg-gray-500"></span>`;
+                            txt.className = "text-xs font-semibold text-gray-400";
+                            txt.innerText = "OFFLINE";
+                        }
+                    }
                 }
 
-            } catch (err) {
-                console.error("Metric fetch error", err);
-            }
+            } catch (err) {}
         }, 2000);
     </script>
 </body>

@@ -2,6 +2,7 @@ import os
 import psutil
 import subprocess
 import requests
+import json
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,19 +15,59 @@ app = FastAPI(title="NanoStreamer")
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 
-# Dummy simple authentication for muis24 / master123
 SESSION_TOKEN = "nanostreamer_session_token"
 VALID_USERNAME = "muis24"
 VALID_PASSWORD = "master123"
+DB_FILE = "channels.json"
 
-# Global state for stream
-stream_process = None
-active_input_url = ""
+# Global state for stream processes
+# mapping path (e.g. 'hbo') to subprocess
+processes = {}
+
+def load_db():
+    if not os.path.exists(DB_FILE):
+        return {}
+    try:
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_db(data):
+    with open(DB_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
 def check_auth(request: Request):
-    if request.cookies.get("session") != SESSION_TOKEN:
-        return False
-    return True
+    return request.cookies.get("session") == SESSION_TOKEN
+
+@app.on_event("startup")
+def startup_event():
+    # Auto-start channels that were marked active
+    db = load_db()
+    for path, ch in db.items():
+        if ch.get("is_active", False):
+            start_ffmpeg(path, ch["source"])
+
+def start_ffmpeg(path, source_url):
+    global processes
+    if path in processes and processes[path].poll() is None:
+        processes[path].terminate()
+        processes[path].wait()
+    
+    # Using ffmpeg to pull TS/RTSP/RTMP and push to local MediaMTX
+    cmd = [
+        "ffmpeg", "-y", "-fflags", "+genpts", "-i", source_url,
+        "-c:v", "copy", "-c:a", "copy", "-f", "flv", f"rtmp://127.0.0.1:1935/{path}"
+    ]
+    processes[path] = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def stop_ffmpeg(path):
+    global processes
+    if path in processes:
+        if processes[path].poll() is None:
+            processes[path].terminate()
+            processes[path].wait()
+        del processes[path]
 
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -53,10 +94,8 @@ async def dashboard(request: Request):
     if not check_auth(request):
         return RedirectResponse(url="/")
     
-    # Check if stream is currently running
-    global stream_process, active_input_url
-    is_running = stream_process is not None and stream_process.poll() is None
-
+    db = load_db()
+    
     # Get local IP for playback URLs
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -70,46 +109,67 @@ async def dashboard(request: Request):
 
     context = {
         "request": request,
-        "is_running": is_running,
-        "active_input": active_input_url,
-        "hls_url": f"http://{local_ip}:8888/live/stream/index.m3u8",
-        "rtmp_url": f"rtmp://{local_ip}:1935/live/stream",
-        "rtsp_url": f"rtsp://{local_ip}:8554/live/stream"
+        "channels": db,
+        "local_ip": local_ip
     }
     return templates.TemplateResponse("dashboard.html", context)
 
-@app.post("/api/stream/start")
-async def start_stream(request: Request, input_url: str = Form(...)):
+@app.post("/api/channel/add")
+async def add_channel(request: Request, name: str = Form(...), path: str = Form(...), source_url: str = Form(...)):
     if not check_auth(request):
         return RedirectResponse(url="/")
     
-    global stream_process, active_input_url
-    if stream_process is not None and stream_process.poll() is None:
-        stream_process.terminate()
-        stream_process.wait()
-
-    # Route external stream to local MediaMTX (using copy to prevent transcoding)
-    # Pushes to rtmp://127.0.0.1:1935/live/stream
-    cmd = [
-        "ffmpeg", "-y", "-fflags", "+genpts", "-i", input_url,
-        "-c:v", "copy", "-c:a", "copy", "-f", "flv", "rtmp://127.0.0.1:1935/live/stream"
-    ]
-    
-    stream_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    active_input_url = input_url
-    
+    # clean path
+    path = path.replace("/", "").replace(" ", "_").lower()
+    if not path:
+        path = "stream"
+        
+    db = load_db()
+    db[path] = {
+        "name": name,
+        "path": path,
+        "source": source_url,
+        "is_active": False
+    }
+    save_db(db)
     return RedirectResponse(url="/dashboard", status_code=303)
 
-@app.post("/api/stream/stop")
-async def stop_stream(request: Request):
+@app.get("/api/channel/start/{path}")
+async def start_channel(request: Request, path: str):
     if not check_auth(request):
         return RedirectResponse(url="/")
     
-    global stream_process, active_input_url
-    if stream_process is not None:
-        stream_process.terminate()
-        stream_process = None
-        active_input_url = ""
+    db = load_db()
+    if path in db:
+        start_ffmpeg(path, db[path]["source"])
+        db[path]["is_active"] = True
+        save_db(db)
+        
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+@app.get("/api/channel/stop/{path}")
+async def stop_channel(request: Request, path: str):
+    if not check_auth(request):
+        return RedirectResponse(url="/")
+    
+    stop_ffmpeg(path)
+    db = load_db()
+    if path in db:
+        db[path]["is_active"] = False
+        save_db(db)
+        
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+@app.get("/api/channel/delete/{path}")
+async def delete_channel(request: Request, path: str):
+    if not check_auth(request):
+        return RedirectResponse(url="/")
+    
+    stop_ffmpeg(path)
+    db = load_db()
+    if path in db:
+        del db[path]
+        save_db(db)
         
     return RedirectResponse(url="/dashboard", status_code=303)
 
@@ -118,36 +178,38 @@ async def metrics(request: Request):
     if not check_auth(request):
         return {"error": "Unauthorized"}
     
-    # CPU & RAM
     cpu = psutil.cpu_percent(interval=None)
     ram = psutil.virtual_memory().percent
     
-    # Network Bandwidth (simple diff)
-    net_io = psutil.net_io_counters()
-    
-    # Get MediaMTX Viewers via its API
-    viewers = 0
+    # Fetch MediaMTX API for Viewers per path
+    viewers_per_path = {}
+    total_viewers = 0
     try:
         r = requests.get("http://127.0.0.1:9997/v3/paths/list", timeout=1)
         if r.status_code == 200:
             data = r.json()
-            items = data.get("items", [])
-            for item in items:
-                if item.get("name") == "live/stream":
-                    viewers = item.get("readers", 0)
-    except Exception:
+            for item in data.get("items", []):
+                p_name = item.get("name")
+                readers = item.get("readers", 0)
+                viewers_per_path[p_name] = readers
+                total_viewers += readers
+    except:
         pass
 
-    global stream_process
-    is_running = stream_process is not None and stream_process.poll() is None
+    global processes
+    channel_status = {}
+    for path, proc in processes.items():
+        is_running = proc.poll() is None
+        channel_status[path] = {
+            "is_running": is_running,
+            "viewers": viewers_per_path.get(path, 0)
+        }
 
     return {
         "cpu": cpu,
         "ram": ram,
-        "viewers": viewers,
-        "is_running": is_running,
-        "net_bytes_sent": net_io.bytes_sent,
-        "net_bytes_recv": net_io.bytes_recv
+        "total_viewers": total_viewers,
+        "channels": channel_status
     }
 
 if __name__ == "__main__":
