@@ -103,16 +103,10 @@ async def dashboard(request: Request):
     
     db = load_db()
     
-    # Get local IP for playback URLs
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('8.8.8.8', 80))
-        local_ip = s.getsockname()[0]
-    except Exception:
-        local_ip = '127.0.0.1'
-    finally:
-        s.close()
+    # Mengambil IP atau Domain otomatis dari URL yang diakses oleh pengguna
+    local_ip = request.url.hostname
+    if not local_ip:
+        local_ip = "127.0.0.1"
 
     context = {
         "request": request,
