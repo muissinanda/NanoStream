@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NanoStreamer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            background-image: radial-gradient(circle at top right, #1e3a8a 0%, transparent 40%),
+                              radial-gradient(circle at bottom left, #0f766e 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen font-sans selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation -->
+    <nav class="glass-card sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-2xl">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">NanoStreamer</h1>
+        </div>
+        <a href="/logout" class="flex items-center space-x-2 bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent hover:border-red-500/30">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <span>Logout</span>
+        </a>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 grid grid-cols-1 xl:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Controls & URLs -->
+        <div class="xl:col-span-1 space-y-6">
+            
+            <!-- Control Card -->
+            <div class="glass-card p-6 rounded-2xl shadow-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-brand-500/10 blur-3xl group-hover:bg-brand-500/20 transition-all"></div>
+                
+                <h2 class="text-lg font-semibold text-white mb-6 flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>Stream Engine</span>
+                </h2>
+                
+                <div class="flex items-center space-x-4 mb-8 bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div id="status-indicator" class="relative flex h-5 w-5">
+                      {% if is_running %}
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                      {% else %}
+                        <span class="relative inline-flex rounded-full h-5 w-5 bg-gray-500"></span>
+                      {% endif %}
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Engine Status</p>
+                        <span id="status-text" class="text-lg font-bold text-white tracking-wide">{% if is_running %}LIVE (Routing){% else %}OFFLINE{% endif %}</span>
+                    </div>
+                </div>
+
+                <form action="{% if is_running %}/api/stream/stop{% else %}/api/stream/start{% endif %}" method="POST">
+                    <div class="mb-5">
+                        <label class="block text-gray-400 mb-2 text-sm font-medium">Source URL (RTMP/RTSP)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            </div>
+                            <input type="text" name="input_url" value="{{ active_input }}" placeholder="rtmp://camera.local/live..." 
+                                class="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-gray-600" 
+                                {% if is_running %}readonly{% else %}required{% endif %}>
+                        </div>
+                    </div>
+                    
+                    {% if is_running %}
+                    <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-red-500/25 flex justify-center items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg>
+                        <span>Stop Stream</span>
+                    </button>
+                    {% else %}
+                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/25 flex justify-center items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Start Routing</span>
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Output Playback Links -->
+            <div class="glass-card p-6 rounded-2xl shadow-xl">
+                <h2 class="text-lg font-semibold text-white mb-2 flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                    <span>Playback URLs</span>
+                </h2>
+                <p class="text-sm text-gray-400 mb-5">Gunakan link ini untuk player eksternal.</p>
+                
+                <div class="space-y-4">
+                    <!-- HLS -->
+                    <div class="group relative">
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="text-xs text-brand-400 font-semibold uppercase tracking-wide">HLS (.m3u8)</label>
+                            <span class="text-[10px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded">OTT Navigator</span>
+                        </div>
+                        <input type="text" readonly value="{{ hls_url }}" onclick="this.select()" class="w-full bg-black/30 border border-white/5 text-gray-300 rounded-lg p-2.5 text-sm cursor-copy hover:border-brand-500/50 transition-colors focus:outline-none focus:ring-1 focus:ring-brand-500">
+                    </div>
+                    <!-- RTMP -->
+                    <div class="group relative">
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="text-xs text-purple-400 font-semibold uppercase tracking-wide">RTMP</label>
+                            <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">VLC Player</span>
+                        </div>
+                        <input type="text" readonly value="{{ rtmp_url }}" onclick="this.select()" class="w-full bg-black/30 border border-white/5 text-gray-300 rounded-lg p-2.5 text-sm cursor-copy hover:border-purple-500/50 transition-colors focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    </div>
+                    <!-- RTSP -->
+                    <div class="group relative">
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="text-xs text-gray-400 font-semibold uppercase tracking-wide">RTSP</label>
+                        </div>
+                        <input type="text" readonly value="{{ rtsp_url }}" onclick="this.select()" class="w-full bg-black/30 border border-white/5 text-gray-300 rounded-lg p-2.5 text-sm cursor-copy hover:border-gray-400/50 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-500">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Metrics & Charts -->
+        <div class="xl:col-span-2 space-y-6">
+            
+            <!-- Quick Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Viewers -->
+                <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-blue-500 relative overflow-hidden">
+                    <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-blue-500/10" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+                    <p class="text-gray-400 text-sm font-medium mb-1 relative z-10">Penonton Aktif</p>
+                    <div class="flex items-end space-x-2 relative z-10">
+                        <p class="text-4xl font-black text-white tracking-tight" id="stat-viewers">0</p>
+                        <p class="text-sm text-blue-400 font-medium pb-1">Users</p>
+                    </div>
+                </div>
+                <!-- CPU -->
+                <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-emerald-500 relative overflow-hidden">
+                    <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-500/10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1h2a1 1 0 011 1v1h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v1a1 1 0 01-1 1h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a1 1 0 01-1-1v-1H3a1 1 0 110-2h1V9H3a1 1 0 110-2h1V6a1 1 0 011-1h2V4a1 1 0 011-1h2zm-1 4H6v8h8V6H9z" clip-rule="evenodd"/></svg>
+                    <p class="text-gray-400 text-sm font-medium mb-1 relative z-10">CPU Load</p>
+                    <div class="flex items-end space-x-2 relative z-10">
+                        <p class="text-4xl font-black text-white tracking-tight" id="stat-cpu">0<span class="text-2xl text-emerald-400">%</span></p>
+                    </div>
+                </div>
+                <!-- RAM -->
+                <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-amber-500 relative overflow-hidden">
+                    <svg class="absolute -right-4 -bottom-4 w-24 h-24 text-amber-500/10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clip-rule="evenodd"/></svg>
+                    <p class="text-gray-400 text-sm font-medium mb-1 relative z-10">RAM Usage</p>
+                    <div class="flex items-end space-x-2 relative z-10">
+                        <p class="text-4xl font-black text-white tracking-tight" id="stat-ram">0<span class="text-2xl text-amber-400">%</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resource Monitor Chart -->
+            <div class="glass-card p-6 rounded-2xl shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold text-white flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span>Resource Monitor</span>
+                    </h2>
+                    <div class="flex items-center space-x-4 text-xs font-medium">
+                        <div class="flex items-center space-x-1">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                            <span class="text-gray-400">CPU</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                            <span class="text-gray-400">RAM</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative h-[300px] w-full">
+                    <canvas id="resourceChart"></canvas>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // Setup Chart
+        const ctx = document.getElementById('resourceChart').getContext('2d');
+        
+        // Create Gradients for Chart
+        const cpuGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        cpuGradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+        cpuGradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+        
+        const ramGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        ramGradient.addColorStop(0, 'rgba(245, 158, 11, 0.4)');
+        ramGradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = 'Inter';
+
+        const resourceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(25).fill(''),
+                datasets: [
+                    {
+                        label: 'CPU (%)',
+                        borderColor: '#10b981',
+                        backgroundColor: cpuGradient,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        data: Array(25).fill(0),
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'RAM (%)',
+                        borderColor: '#f59e0b',
+                        backgroundColor: ramGradient,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        data: Array(25).fill(0),
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 400 },
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { 
+                        min: 0, max: 100, 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                        ticks: { callback: function(value) { return value + '%' } }
+                    },
+                    x: { grid: { display: false, drawBorder: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: true,
+                        boxPadding: 4
+                    }
+                }
+            }
+        });
+
+        // Polling Data
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/metrics');
+                const data = await res.json();
+
+                if(data.error) return;
+
+                // Animate Numbers (Simple direct update for now)
+                document.getElementById('stat-cpu').innerHTML = data.cpu + '<span class="text-2xl text-emerald-400">%</span>';
+                document.getElementById('stat-ram').innerHTML = data.ram + '<span class="text-2xl text-amber-400">%</span>';
+                document.getElementById('stat-viewers').innerText = data.viewers;
+
+                // Update Chart smoothly
+                resourceChart.data.datasets[0].data.shift();
+                resourceChart.data.datasets[0].data.push(data.cpu);
+                resourceChart.data.datasets[1].data.shift();
+                resourceChart.data.datasets[1].data.push(data.ram);
+                resourceChart.update('none'); // use 'none' for smooth stream feel without jumping
+
+                // Update Status Badge
+                const indicator = document.getElementById('status-indicator');
+                const statText = document.getElementById('status-text');
+                if(data.is_running) {
+                    indicator.innerHTML = `
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                    `;
+                    statText.innerText = "LIVE (Routing)";
+                    statText.className = "text-lg font-bold text-emerald-400 tracking-wide";
+                } else {
+                    indicator.innerHTML = `<span class="relative inline-flex rounded-full h-5 w-5 bg-gray-600"></span>`;
+                    statText.innerText = "OFFLINE";
+                    statText.className = "text-lg font-bold text-gray-500 tracking-wide";
+                }
+
+            } catch (err) {
+                console.error("Metric fetch error", err);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

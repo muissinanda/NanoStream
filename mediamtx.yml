@@ -1,0 +1,27 @@
+# MediaMTX configuration file for NanoStreamer
+
+# Enable API to fetch metrics and paths
+api: yes
+apiAddress: 127.0.0.1:9997
+
+# Enable RTMP (usually port 1935)
+rtmp: yes
+rtmpAddress: :1935
+
+# Enable RTSP (usually port 8554)
+rtsp: yes
+rtspAddress: :8554
+
+# Enable HLS (usually port 8888)
+hls: yes
+hlsAddress: :8888
+
+# WebRTC optional (default enabled on MediaMTX)
+webrtc: yes
+webrtcAddress: :8889
+
+paths:
+  # 'live' is the default endpoint, e.g., rtmp://server/live/stream
+  all_others:
+    # We will use API to inject config or let it dynamically create paths
+    runOnInit: ""
