@@ -146,9 +146,14 @@
                             </div>
                         </div>
                         
-                        <a href="/api/channel/delete/{{ path }}" class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors" title="Delete Channel" onclick="return confirm('Hapus channel {{ ch.name }}?');">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </a>
+                        <div class="flex space-x-2">
+                            <button onclick="openEditModal('{{ path }}', '{{ ch.name }}', '{{ ch.source }}')" class="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-colors" title="Edit Channel">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <a href="/api/channel/delete/{{ path }}" class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors" title="Delete Channel" onclick="return confirm('Hapus channel {{ ch.name }}?');">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="bg-black/30 p-3 rounded-lg mb-4">
@@ -157,13 +162,19 @@
                     </div>
 
                     <div class="space-y-2 mb-5">
-                        <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden">
+                        <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden group">
                             <span class="text-[10px] font-bold bg-brand-500/20 text-brand-300 px-2 py-1.5 w-14 text-center shrink-0">HLS</span>
                             <input type="text" id="hls-url-{{ path }}" readonly value="http://{{ local_ip }}:8888/{{ path }}/index.m3u8" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                            <button onclick="copyToClipboard('hls-url-{{ path }}')" class="p-1.5 text-gray-400 hover:text-brand-400 opacity-50 group-hover:opacity-100 transition-opacity" title="Copy">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
                         </div>
-                        <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden">
+                        <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden group">
                             <span class="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-2 py-1.5 w-14 text-center shrink-0">RTMP</span>
                             <input type="text" id="rtmp-url-{{ path }}" readonly value="rtmp://{{ local_ip }}:1935/{{ path }}" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                            <button onclick="copyToClipboard('rtmp-url-{{ path }}')" class="p-1.5 text-gray-400 hover:text-purple-400 opacity-50 group-hover:opacity-100 transition-opacity" title="Copy">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
                         </div>
                     </div>
 
@@ -180,7 +191,89 @@
         </div>
     </div>
 
+    <!-- Edit Channel Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300" id="editModalContent">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center space-x-2">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span>Edit Channel</span>
+            </h2>
+            
+            <form action="/api/channel/edit" method="POST" class="space-y-4">
+                <input type="hidden" name="old_path" id="edit_old_path">
+                <div>
+                    <label class="block text-gray-400 mb-1 text-xs font-medium">Channel Name</label>
+                    <input type="text" name="name" id="edit_name" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1 text-xs font-medium">Path (ID)</label>
+                    <input type="text" name="path" id="edit_path" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1 text-xs font-medium">Source URL (.ts, m3u8, rtmp)</label>
+                    <input type="text" name="source_url" id="edit_source" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 text-sm" required>
+                </div>
+                
+                <div class="flex space-x-3 mt-6 pt-4 border-t border-white/10">
+                    <button type="button" onclick="closeEditModal()" class="w-1/2 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition-all">Batal</button>
+                    <button type="submit" class="w-1/2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification (for Copy) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span>Link disalin!</span>
+    </div>
+
     <script>
+        // Copy to clipboard
+        function copyToClipboard(elementId) {
+            var copyText = document.getElementById(elementId);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // Untuk mobile
+            navigator.clipboard.writeText(copyText.value);
+            
+            // Show toast
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+
+        // Edit Modal Logic
+        function openEditModal(path, name, source) {
+            document.getElementById('edit_old_path').value = path;
+            document.getElementById('edit_path').value = path;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_source').value = source;
+            
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            
+            modal.classList.remove('hidden');
+            // Sedikit delay agar transisi CSS berjalan
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
         // Update URL dynamically based on user input for Domain
         function updateAllUrls() {
             const domain = document.getElementById('display_domain').value || '127.0.0.1';

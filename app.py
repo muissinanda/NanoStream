@@ -174,6 +174,41 @@ async def delete_channel(request: Request, path: str):
         
     return RedirectResponse(url="/dashboard", status_code=303)
 
+@app.post("/api/channel/edit")
+async def edit_channel(request: Request, old_path: str = Form(...), name: str = Form(...), path: str = Form(...), source_url: str = Form(...)):
+    if not check_auth(request):
+        return RedirectResponse(url="/")
+        
+    db = load_db()
+    if old_path in db:
+        # Jika path/ID berubah, kita harus menghapus stream lama dan memindahkannya
+        was_active = db[old_path]["is_active"]
+        if was_active:
+            stop_ffmpeg(old_path)
+            
+        del db[old_path]
+        
+        # Bersihkan path baru
+        path = path.replace("/", "").replace(" ", "_").lower()
+        if not path:
+            path = "stream"
+            
+        db[path] = {
+            "name": name,
+            "path": path,
+            "source": source_url,
+            "is_active": False
+        }
+        
+        # Jika sebelumnya nyala, otomatis nyalakan lagi dengan URL baru
+        if was_active:
+            start_ffmpeg(path, source_url)
+            db[path]["is_active"] = True
+            
+        save_db(db)
+        
+    return RedirectResponse(url="/dashboard", status_code=303)
+
 @app.get("/api/metrics")
 async def metrics(request: Request):
     if not check_auth(request):
@@ -191,9 +226,13 @@ async def metrics(request: Request):
             data = r.json()
             for item in data.get("items", []):
                 p_name = item.get("name")
-                readers = item.get("readers", 0)
-                viewers_per_path[p_name] = readers
-                total_viewers += readers
+                # MediaMTX 'readers' adalah sebuah list/array of objects.
+                # Kita harus menghitung panjang list tersebut untuk mendapat jumlah penonton.
+                readers_list = item.get("readers", [])
+                readers_count = len(readers_list) if isinstance(readers_list, list) else 0
+                
+                viewers_per_path[p_name] = readers_count
+                total_viewers += readers_count
     except:
         pass
 
