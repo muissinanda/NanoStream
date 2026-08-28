@@ -40,13 +40,37 @@ def save_db(data):
 def check_auth(request: Request):
     return request.cookies.get("session") == SESSION_TOKEN
 
+import asyncio
+
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     # Auto-start channels that were marked active
     db = load_db()
     for path, ch in db.items():
         if ch.get("is_active", False):
             start_ffmpeg(path, ch["source"])
+            
+    # Jalankan background monitor untuk menjaga stream tetap hidup (Auto-Restart)
+    asyncio.create_task(monitor_streams())
+
+async def monitor_streams():
+    """
+    Fungsi ini akan mengecek setiap 3 detik.
+    Jika ada stream yang seharusnya aktif (is_active=True) tapi FFmpeg-nya mati/crash
+    (karena putus jaringan, client diskonek, dll), maka akan otomatis di-restart!
+    """
+    while True:
+        await asyncio.sleep(3)
+        try:
+            db = load_db()
+            for path, ch in db.items():
+                if ch.get("is_active", False):
+                    proc = processes.get(path)
+                    # Jika proses tidak ada atau sudah mati (poll() is not None)
+                    if proc is None or proc.poll() is not None:
+                        start_ffmpeg(path, ch["source"])
+        except Exception:
+            pass
 
 def start_ffmpeg(path, source_url):
     global processes
