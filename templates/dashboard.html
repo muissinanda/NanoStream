@@ -186,8 +186,8 @@
             const domain = document.getElementById('display_domain').value || '127.0.0.1';
             
             {% for path, ch in channels.items() %}
-                // Gunakan format http atau https otomatis, tapi karena port spesifik biasanya kita tulis lengkap
-                let protocol = domain.includes('https://') ? '' : (domain.includes('http://') ? '' : 'http://');
+                // Pastikan menggunakan https:// jika diakses melalui Cloudflare
+                let protocol = domain.includes('https://') ? '' : (domain.includes('http://') ? '' : 'https://');
                 let cleanDomain = domain.replace('http://', '').replace('https://', '');
                 
                 // Gunakan rute Reverse Proxy HLS bawaan NanoStreamer agar bypass Cloudflare Tunnel

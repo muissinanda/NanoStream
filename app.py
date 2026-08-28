@@ -215,29 +215,37 @@ async def metrics(request: Request):
 
 # --- HLS REVERSE PROXY ---
 # Berfungsi untuk mem-bypass blokir port Cloudflare Tunnel
-# Sehingga user bisa memutar lewat domain nobar.boyblade.my.id tanpa port 8888
 from fastapi.responses import StreamingResponse
 
 @app.get("/hls/{path}/{filename}")
-def proxy_hls(path: str, filename: str):
+def proxy_hls(path: str, filename: str, request: Request):
+    # Menyertakan query parameters (jika ada)
+    query = request.url.query
     url = f"http://127.0.0.1:8888/{path}/{filename}"
-    
-    def iterfile():
-        try:
-            with requests.get(url, stream=True, timeout=5) as r:
-                for chunk in r.iter_content(chunk_size=65536):
+    if query:
+        url += f"?{query}"
+        
+    try:
+        r = requests.get(url, stream=True, timeout=10)
+        
+        def iterfile():
+            try:
+                for chunk in r.iter_content(chunk_size=131072): # 128KB chunks untuk video streaming
                     if chunk:
                         yield chunk
-        except Exception:
-            pass
+            finally:
+                r.close()
+                
+        # Mengambil Content-Type asli dari MediaMTX (mendukung .ts, .m3u8, .mp4, .m4s)
+        headers = {}
+        if "Content-Type" in r.headers:
+            headers["Content-Type"] = r.headers["Content-Type"]
+        else:
+            headers["Content-Type"] = "application/octet-stream"
             
-    headers = {}
-    if filename.endswith(".m3u8"):
-        headers["Content-Type"] = "application/vnd.apple.mpegurl"
-    elif filename.endswith(".ts"):
-        headers["Content-Type"] = "video/MP2T"
-        
-    return StreamingResponse(iterfile(), headers=headers)
+        return StreamingResponse(iterfile(), headers=headers)
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
