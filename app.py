@@ -81,6 +81,7 @@ def start_ffmpeg(path, source_url):
     # Mengubah audio menjadi AAC (transcode audio) memakan CPU <1% namun menjamin 100% kompatibel dengan HLS/VLC. Video tetap copy.
     cmd = [
         "ffmpeg", "-y", 
+        "-fflags", "nobuffer", "-flags", "low_delay",
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "-i", source_url,
@@ -300,7 +301,12 @@ def proxy_hls(path: str, filename: str, request: Request):
                 r.close()
                 
         # Mengambil Content-Type asli dari MediaMTX (mendukung .ts, .m3u8, .mp4, .m4s)
-        headers = {}
+        headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "Access-Control-Allow-Origin": "*"
+        }
         if "Content-Type" in r.headers:
             headers["Content-Type"] = r.headers["Content-Type"]
         else:
