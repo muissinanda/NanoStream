@@ -55,11 +55,20 @@ def start_ffmpeg(path, source_url):
         processes[path].wait()
     
     # Using ffmpeg to pull TS/RTSP/RTMP and push to local MediaMTX
+    # Changed to push via RTSP because FLV/RTMP doesn't support some IPTV codecs (like H.265 or AC3/MPEG audio)
+    # Added reconnect flags and User-Agent to bypass IPTV blocks
     cmd = [
-        "ffmpeg", "-y", "-fflags", "+genpts", "-i", source_url,
-        "-c:v", "copy", "-c:a", "copy", "-f", "flv", f"rtmp://127.0.0.1:1935/{path}"
+        "ffmpeg", "-y", 
+        "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
+        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "-i", source_url,
+        "-c:v", "copy", "-c:a", "copy", 
+        "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
     ]
-    processes[path] = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    # Menyimpan log untuk proses ini (agar mudah di debug jika gagal)
+    log_file = open(f"/opt/nanostreamer/log_{path}.txt", "w")
+    processes[path] = subprocess.Popen(cmd, stdout=log_file, stderr=log_file)
 
 def stop_ffmpeg(path):
     global processes
