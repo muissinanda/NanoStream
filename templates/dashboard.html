@@ -44,16 +44,24 @@
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">NanoStreamer <span class="text-xs font-normal text-brand-400 ml-2 border border-brand-500/30 px-2 py-0.5 rounded-full bg-brand-500/10">Multi-Channel</span></h1>
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">NanoStreamer</h1>
         </div>
-        <a href="/logout" class="flex items-center space-x-2 bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent hover:border-red-500/30">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            <span>Logout</span>
-        </a>
+        
+        <div class="flex items-center space-x-6">
+            <!-- Custom Domain/IP Input for Playback URLs -->
+            <div class="flex items-center space-x-2 bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 hidden md:flex">
+                <span class="text-xs text-gray-400 font-medium">Domain/IP HLS:</span>
+                <input type="text" id="display_domain" value="{{ local_ip }}" oninput="updateAllUrls()" class="bg-transparent text-white text-sm focus:outline-none w-48 font-medium">
+            </div>
+
+            <a href="/logout" class="flex items-center space-x-2 bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-transparent hover:border-red-500/30">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Logout</span>
+            </a>
+        </div>
     </nav>
 
     <div class="container mx-auto px-4 space-y-8">
-        
         <!-- Top Stats Row -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="glass-card p-6 rounded-2xl shadow-xl border-t-4 border-t-blue-500 relative overflow-hidden">
@@ -72,7 +80,6 @@
 
         <!-- Middle Row: Add Channel & Global Chart -->
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            <!-- Add Channel Form -->
             <div class="xl:col-span-1 glass-card p-6 rounded-2xl shadow-xl relative overflow-hidden">
                 <h2 class="text-lg font-semibold text-white mb-5 flex items-center space-x-2">
                     <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -90,7 +97,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-400 mb-1 text-xs font-medium">Source URL (.ts, m3u8, rtmp)</label>
-                        <input type="text" name="source_url" placeholder="http://.../live.php?mac=...&extension=ts" class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-brand-500 text-sm" required>
+                        <input type="text" name="source_url" placeholder="http://.../live.php?mac=..." class="w-full bg-black/40 border border-white/10 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-brand-500 text-sm" required>
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-blue-600 hover:from-brand-400 hover:to-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex justify-center items-center space-x-2 mt-4">
                         <span>Add Channel</span>
@@ -98,7 +105,6 @@
                 </form>
             </div>
 
-            <!-- Resource Chart -->
             <div class="xl:col-span-2 glass-card p-6 rounded-2xl shadow-xl">
                 <div class="flex justify-between items-center mb-2">
                     <h2 class="text-lg font-semibold text-white">Server Resources</h2>
@@ -153,11 +159,11 @@
                     <div class="space-y-2 mb-5">
                         <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden">
                             <span class="text-[10px] font-bold bg-brand-500/20 text-brand-300 px-2 py-1.5 w-14 text-center shrink-0">HLS</span>
-                            <input type="text" readonly value="http://{{ local_ip }}:8888/{{ path }}/index.m3u8" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                            <input type="text" id="hls-url-{{ path }}" readonly value="http://{{ local_ip }}:8888/{{ path }}/index.m3u8" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
                         </div>
                         <div class="flex items-center bg-black/40 rounded border border-white/5 overflow-hidden">
                             <span class="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-2 py-1.5 w-14 text-center shrink-0">RTMP</span>
-                            <input type="text" readonly value="rtmp://{{ local_ip }}:1935/{{ path }}" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
+                            <input type="text" id="rtmp-url-{{ path }}" readonly value="rtmp://{{ local_ip }}:1935/{{ path }}" class="bg-transparent text-gray-300 text-xs w-full px-2 py-1 outline-none cursor-copy" onclick="this.select()">
                         </div>
                     </div>
 
@@ -169,17 +175,33 @@
                         {% endif %}
                     </div>
                 </div>
-                {% else %}
-                <div class="col-span-full py-12 text-center text-gray-500 bg-white/5 rounded-2xl border border-white/10 border-dashed">
-                    <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                    <p>Belum ada channel. Silakan tambahkan channel baru di form atas.</p>
-                </div>
                 {% endfor %}
             </div>
         </div>
     </div>
 
     <script>
+        // Update URL dynamically based on user input for Domain
+        function updateAllUrls() {
+            const domain = document.getElementById('display_domain').value || '127.0.0.1';
+            
+            {% for path, ch in channels.items() %}
+                // Gunakan format http atau https otomatis, tapi karena port spesifik biasanya kita tulis lengkap
+                let protocol = domain.includes('https://') ? '' : (domain.includes('http://') ? '' : 'http://');
+                let cleanDomain = domain.replace('http://', '').replace('https://', '');
+                
+                // Gunakan rute Reverse Proxy HLS bawaan NanoStreamer agar bypass Cloudflare Tunnel
+                document.getElementById('hls-url-{{ path }}').value = `${protocol}${cleanDomain}/hls/{{ path }}/index.m3u8`;
+                
+                // RTMP tidak bisa lewat Cloudflare, tetap biarkan pakai port 1935 (harus pakai IP Publik VPS asli)
+                let rtmpDomain = cleanDomain.split(':')[0]; // remove port if exists
+                document.getElementById('rtmp-url-{{ path }}').value = `rtmp://${rtmpDomain}:1935/{{ path }}`;
+            {% endfor %}
+        }
+        
+        // Initial setup
+        setTimeout(updateAllUrls, 100);
+
         const ctx = document.getElementById('resourceChart').getContext('2d');
         const cpuGradient = ctx.createLinearGradient(0, 0, 0, 240);
         cpuGradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
@@ -217,23 +239,18 @@
                 const data = await res.json();
                 if(data.error) return;
 
-                // Update Stats
                 document.getElementById('stat-cpu').innerHTML = data.cpu + '<span class="text-2xl text-emerald-400">%</span>';
                 document.getElementById('stat-ram').innerHTML = data.ram + '<span class="text-2xl text-amber-400">%</span>';
                 document.getElementById('stat-viewers').innerHTML = data.total_viewers + ' <span class="text-lg text-blue-400 font-medium">Users</span>';
 
-                // Chart
                 resourceChart.data.datasets[0].data.shift(); resourceChart.data.datasets[0].data.push(data.cpu);
                 resourceChart.data.datasets[1].data.shift(); resourceChart.data.datasets[1].data.push(data.ram);
                 resourceChart.update('none');
 
-                // Channels Real-time Updates (Status & Viewers)
                 for (const [path, stats] of Object.entries(data.channels)) {
                     const viewerEl = document.getElementById(`viewers-${path}`);
                     if(viewerEl) viewerEl.innerText = stats.viewers;
 
-                    // Note: We only update viewers dynamically without refreshing the page. 
-                    // Start/Stop status triggers a page reload naturally, but we can sync the UI just in case.
                     const ind = document.getElementById(`status-ind-${path}`);
                     const txt = document.getElementById(`status-txt-${path}`);
                     if(ind && txt) {
@@ -248,7 +265,6 @@
                         }
                     }
                 }
-
             } catch (err) {}
         }, 2000);
     </script>

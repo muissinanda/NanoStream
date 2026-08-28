@@ -213,5 +213,31 @@ async def metrics(request: Request):
         "channels": channel_status
     }
 
+# --- HLS REVERSE PROXY ---
+# Berfungsi untuk mem-bypass blokir port Cloudflare Tunnel
+# Sehingga user bisa memutar lewat domain nobar.boyblade.my.id tanpa port 8888
+from fastapi.responses import StreamingResponse
+
+@app.get("/hls/{path}/{filename}")
+def proxy_hls(path: str, filename: str):
+    url = f"http://127.0.0.1:8888/{path}/{filename}"
+    
+    def iterfile():
+        try:
+            with requests.get(url, stream=True, timeout=5) as r:
+                for chunk in r.iter_content(chunk_size=65536):
+                    if chunk:
+                        yield chunk
+        except Exception:
+            pass
+            
+    headers = {}
+    if filename.endswith(".m3u8"):
+        headers["Content-Type"] = "application/vnd.apple.mpegurl"
+    elif filename.endswith(".ts"):
+        headers["Content-Type"] = "video/MP2T"
+        
+    return StreamingResponse(iterfile(), headers=headers)
+
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
