@@ -341,5 +341,15 @@ def proxy_hls(path: str, filename: str, request: Request):
     except Exception as e:
         return Response(content=f"Upstream Timeout/Error: {str(e)}", status_code=504)
 
+@app.get("/api/logs/{path}")
+def get_logs(path: str):
+    import os
+    log_path = f"/opt/nanostreamer/log_{path}.txt"
+    if os.path.exists(log_path):
+        with open(log_path, "r") as f:
+            lines = f.readlines()
+            return PlainTextResponse("".join(lines[-50:]))
+    return PlainTextResponse("Log not found.")
+
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
