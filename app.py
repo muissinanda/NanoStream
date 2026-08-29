@@ -80,6 +80,7 @@ def start_ffmpeg(path, source_url):
     
     # Mengubah audio menjadi AAC (transcode audio) memakan CPU <1% namun menjamin 100% kompatibel dengan HLS/VLC. Video tetap copy.
     cmd = [
+        "proxychains4", "-q",
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-timeout", "10000000",
@@ -94,12 +95,7 @@ def start_ffmpeg(path, source_url):
     # Menyimpan log untuk proses ini (agar mudah di debug jika gagal)
     log_file = open(f"/opt/nanostreamer/log_{path}.txt", "w")
     
-    # Inject Proxy SOCKS5 dari Cloudflare WARP
-    env = os.environ.copy()
-    env["all_proxy"] = "socks5h://127.0.0.1:40000"
-    env["no_proxy"] = "127.0.0.1,localhost,::1"
-    
-    processes[path] = subprocess.Popen(cmd, stdout=log_file, stderr=log_file, env=env)
+    processes[path] = subprocess.Popen(cmd, stdout=log_file, stderr=log_file)
 
 def stop_ffmpeg(path):
     global processes
