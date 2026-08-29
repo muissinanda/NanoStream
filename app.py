@@ -294,26 +294,21 @@ def proxy_hls(path: str, filename: str, request: Request):
         
         def iterfile():
             try:
-                for chunk in r.iter_content(chunk_size=131072): # 128KB chunks untuk video streaming
+                # Super Ringan: Ukuran chunk dikecilkan menjadi 8KB agar data langsung disemburkan ke player
+                # tanpa harus menunggu buffer internal Python terkumpul banyak.
+                for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         yield chunk
             finally:
                 r.close()
                 
-        # Mengambil Content-Type asli dari MediaMTX (mendukung .ts, .m3u8, .mp4, .m4s)
         # Mengambil Content-Type asli dari MediaMTX
         headers = {
-            "Access-Control-Allow-Origin": "*"
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
         }
-        
-        # Super Ringan: Jangan cache playlist (m3u8), TAPI BOLEHKAN cache untuk video (.ts)
-        # Ini membuat Cloudflare menyimpan video di server terdekat, loading jadi secepat kilat!
-        if filename.endswith(".m3u8"):
-            headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            headers["Pragma"] = "no-cache"
-            headers["Expires"] = "0"
-        else:
-            headers["Cache-Control"] = "public, max-age=3600"
             
         if "Content-Type" in r.headers:
             headers["Content-Type"] = r.headers["Content-Type"]
