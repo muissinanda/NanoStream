@@ -93,7 +93,13 @@ def start_ffmpeg(path, source_url):
     
     # Menyimpan log untuk proses ini (agar mudah di debug jika gagal)
     log_file = open(f"/opt/nanostreamer/log_{path}.txt", "w")
-    processes[path] = subprocess.Popen(cmd, stdout=log_file, stderr=log_file)
+    
+    # Inject Proxy SOCKS5 dari Cloudflare WARP
+    env = os.environ.copy()
+    env["all_proxy"] = "socks5h://127.0.0.1:40000"
+    env["no_proxy"] = "127.0.0.1,localhost,::1"
+    
+    processes[path] = subprocess.Popen(cmd, stdout=log_file, stderr=log_file, env=env)
 
 def stop_ffmpeg(path):
     global processes
