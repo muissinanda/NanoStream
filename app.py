@@ -85,6 +85,7 @@ def start_ffmpeg(path, source_url):
         "-timeout", "10000000",
         "-user_agent", "IPTVSmartersPro",
         "-i", source_url,
+        "-map", "0:v:0?", "-map", "0:a:0?",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
         "-max_muxing_queue_size", "1024",
         "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
