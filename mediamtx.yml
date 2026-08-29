@@ -19,8 +19,8 @@ hlsAddress: :8888
 hlsAlwaysRemux: yes
 # Gunakan mpegts agar loading HLS super cepat di player jadul (VLC/OTT Navigator)
 hlsVariant: mpegts
-hlsSegmentCount: 3
-hlsSegmentDuration: 1s
+hlsSegmentCount: 5
+hlsSegmentDuration: 2s
 
 # WebRTC optional (default enabled on MediaMTX)
 webrtc: yes

@@ -319,7 +319,9 @@ def proxy_hls(path: str, filename: str, request: Request):
         # Streaming untuk file video (sekarang berekstensi .bin)
         def iterfile():
             try:
-                for chunk in r.iter_content(chunk_size=8192):
+                # Chunk size dibesarkan ke 128KB agar transfer rate maksimal
+                # Mencegah bottleneck dan micro-buffering di sisi Python/FastAPI
+                for chunk in r.iter_content(chunk_size=131072):
                     if chunk:
                         yield chunk
             finally:
