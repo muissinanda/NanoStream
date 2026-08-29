@@ -83,9 +83,11 @@ def start_ffmpeg(path, source_url):
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-timeout", "10000000",
-        "-user_agent", "ExoPlayer/2.18.1 (Linux; Android 11) ExoPlayerLib/2.18.1",
+        "-user_agent", "VLC/3.0.18 LibVLC/3.0.18",
         "-i", source_url,
+        "-map", "0:v?", "-map", "0:a?",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
+        "-max_muxing_queue_size", "1024",
         "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
     ]
     
