@@ -12,6 +12,10 @@ rtmpAddress: :1935
 rtsp: yes
 rtspAddress: :8554
 
+# Enable SRT (for MPEG-TS full passthrough)
+srt: yes
+srtAddress: :8890
+
 # Enable HLS (usually port 8888)
 hls: yes
 hlsAddress: :8888
