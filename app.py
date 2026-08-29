@@ -128,6 +128,9 @@ async def dashboard(request: Request):
     
     db = load_db()
     
+    # Sort channel secara alfabetis berdasarkan nama channel (A-Z)
+    db = dict(sorted(db.items(), key=lambda x: x[1].get("name", "").lower()))
+    
     # Mengambil IP atau Domain otomatis dari URL yang diakses oleh pengguna
     local_ip = request.url.hostname
     if not local_ip:
