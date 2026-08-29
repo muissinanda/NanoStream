@@ -15,6 +15,12 @@ rtspAddress: :8554
 # Enable HLS (usually port 8888)
 hls: yes
 hlsAddress: :8888
+# Wajib agar HLS langsung di-generate di background, tidak menunggu viewer pertama!
+hlsAlwaysRemux: yes
+# Gunakan mpegts agar loading HLS super cepat di player jadul (VLC/OTT Navigator)
+hlsVariant: mpegts
+hlsSegmentCount: 3
+hlsSegmentDuration: 1s
 
 # WebRTC optional (default enabled on MediaMTX)
 webrtc: yes
