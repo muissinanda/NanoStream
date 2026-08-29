@@ -282,41 +282,57 @@ async def metrics(request: Request):
 
 # --- HLS REVERSE PROXY ---
 # Berfungsi untuk mem-bypass blokir port Cloudflare Tunnel
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 
 @app.get("/hls/{path}/{filename}")
 def proxy_hls(path: str, filename: str, request: Request):
-    # Menyertakan query parameters (jika ada)
+    # [OBFUSCATION] Jika client meminta .bin, kita rubah kembali ke .ts untuk MediaMTX
+    real_filename = filename
+    if filename.endswith(".bin"):
+        real_filename = filename.replace(".bin", ".ts")
+        
+    url = f"http://127.0.0.1:8888/{path}/{real_filename}"
     query = request.url.query
-    url = f"http://127.0.0.1:8888/{path}/{filename}"
     if query:
         url += f"?{query}"
         
     try:
         r = requests.get(url, stream=True, timeout=10)
         
+        # [OBFUSCATION] Manipulasi Playlist .m3u8 agar Cloudflare mengira ini file text/json biasa
+        if real_filename.endswith(".m3u8"):
+            content = r.text
+            # Ubah semua akhiran .ts di dalam playlist menjadi .bin
+            content = content.replace(".ts", ".bin")
+            return Response(
+                content=content, 
+                status_code=r.status_code,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                    "Content-Type": "text/plain" # Menipu Cloudflare (Bukan video)
+                }
+            )
+        
+        # Streaming untuk file video (sekarang berekstensi .bin)
         def iterfile():
             try:
-                # Super Ringan: Ukuran chunk dikecilkan menjadi 8KB agar data langsung disemburkan ke player
-                # tanpa harus menunggu buffer internal Python terkumpul banyak.
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         yield chunk
             finally:
                 r.close()
                 
-        # Mengambil Content-Type asli dari MediaMTX
+        # [OBFUSCATION] Manipulasi Header Video agar dianggap sebagai file sistem acak, bukan video
         headers = {
             "Access-Control-Allow-Origin": "*",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
-            "Expires": "0"
+            "Expires": "0",
+            "Content-Type": "application/octet-stream" # Menipu Cloudflare (Bukan video)
         }
-            
-        if "Content-Type" in r.headers:
-            headers["Content-Type"] = r.headers["Content-Type"]
-        else:
-            headers["Content-Type"] = "application/octet-stream"
             
         return StreamingResponse(iterfile(), headers=headers, status_code=r.status_code)
     except Exception as e:
