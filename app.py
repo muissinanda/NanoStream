@@ -85,9 +85,10 @@ def start_ffmpeg(path, source_url):
         "-timeout", "10000000",
         "-user_agent", "IPTVSmartersPro",
         "-i", source_url,
-        "-c:v", "copy", "-c:a", "copy",
+        "-map", "0:v:0?", "-map", "0:a:0?",
+        "-c:v", "copy", "-c:a", "aac", "-ac", "2", "-b:a", "128k",
         "-max_muxing_queue_size", "1024",
-        "-f", "mpegts", f"srt://127.0.0.1:8890?streamid=publish:{path}"
+        "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
     ]
     
     # Menyimpan log untuk proses ini (agar mudah di debug jika gagal)
