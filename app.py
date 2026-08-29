@@ -80,7 +80,6 @@ def start_ffmpeg(path, source_url):
     
     # Mengubah audio menjadi AAC (transcode audio) memakan CPU <1% namun menjamin 100% kompatibel dengan HLS/VLC. Video tetap copy.
     cmd = [
-        "proxychains4", "-q",
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-timeout", "10000000",
