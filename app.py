@@ -83,7 +83,7 @@ def start_ffmpeg(path, source_url):
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-timeout", "10000000",
-        "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "-user_agent", "IPTVSmartersPro",
         "-i", source_url,
         "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
         "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
