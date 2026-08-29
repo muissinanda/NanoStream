@@ -156,8 +156,20 @@
                         </div>
                     </div>
 
-                    <div class="bg-black/30 p-3 rounded-lg mb-4">
-                        <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Source (Input)</p>
+                    <div class="flex items-center space-x-2 mb-4">
+                        {% if ch.is_active %}
+                        <div class="status-dot w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span class="status-text text-emerald-400 text-xs font-bold tracking-wider">LIVE</span>
+                        {% else %}
+                        <div class="status-dot w-2 h-2 rounded-full bg-gray-500"></div>
+                        <span class="status-text text-gray-400 text-xs font-bold tracking-wider">OFFLINE</span>
+                        {% endif %}
+                        <span class="text-gray-500 text-xs px-2">•</span>
+                        <span class="text-blue-400 text-xs font-semibold">{{ ch.viewers }} Viewers</span>
+                    </div>
+
+                    <div class="mb-4 bg-black/40 rounded-lg p-3 border border-white/5">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Source (Input)</p>
                         <p class="text-xs text-gray-300 truncate" title="{{ ch.source }}">{{ ch.source }}</p>
                     </div>
 
@@ -180,9 +192,9 @@
 
                     <div class="flex space-x-3">
                         {% if ch.is_active %}
-                        <a href="/api/channel/stop/{{ path }}" class="w-full text-center bg-red-500/20 hover:bg-red-500 border border-red-500/50 hover:border-red-500 text-red-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all">Stop Stream</a>
+                        <button onclick="toggleStream('{{ path }}', 'stop', this)" class="w-full text-center bg-red-500/20 hover:bg-red-500 border border-red-500/50 hover:border-red-500 text-red-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all">Stop Stream</button>
                         {% else %}
-                        <a href="/api/channel/start/{{ path }}" class="w-full text-center bg-emerald-500/20 hover:bg-emerald-500 border border-emerald-500/50 hover:border-emerald-500 text-emerald-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all">Start Stream</a>
+                        <button onclick="toggleStream('{{ path }}', 'start', this)" class="w-full text-center bg-emerald-500/20 hover:bg-emerald-500 border border-emerald-500/50 hover:border-emerald-500 text-emerald-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all">Start Stream</button>
                         {% endif %}
                     </div>
                 </div>
@@ -250,6 +262,47 @@
                 }, 2000);
             } catch (err) {
                 alert("Gagal menyalin text, browser anda tidak mendukung.");
+            }
+        }
+
+        // Toggle Stream without refreshing the page
+        async function toggleStream(path, action, btnElement) {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "Loading...";
+            btnElement.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                // Call the API (it returns a redirect, which fetch follows seamlessly)
+                await fetch(`/api/channel/${action}/${path}`);
+                
+                const card = btnElement.closest('.glass-card');
+                const statusDot = card.querySelector('.status-dot');
+                const statusText = card.querySelector('.status-text');
+                
+                if (action === 'start') {
+                    // Update UI to LIVE
+                    btnElement.innerText = "Stop Stream";
+                    btnElement.setAttribute('onclick', `toggleStream('${path}', 'stop', this)`);
+                    btnElement.className = "w-full text-center bg-red-500/20 hover:bg-red-500 border border-red-500/50 hover:border-red-500 text-red-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all";
+                    
+                    statusDot.className = "status-dot w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                    statusText.className = "status-text text-emerald-400 text-xs font-bold tracking-wider";
+                    statusText.innerText = "LIVE";
+                } else {
+                    // Update UI to OFFLINE
+                    btnElement.innerText = "Start Stream";
+                    btnElement.setAttribute('onclick', `toggleStream('${path}', 'start', this)`);
+                    btnElement.className = "w-full text-center bg-emerald-500/20 hover:bg-emerald-500 border border-emerald-500/50 hover:border-emerald-500 text-emerald-300 hover:text-white text-sm font-semibold py-2 rounded-xl transition-all";
+                    
+                    statusDot.className = "status-dot w-2 h-2 rounded-full bg-gray-500";
+                    statusText.className = "status-text text-gray-400 text-xs font-bold tracking-wider";
+                    statusText.innerText = "OFFLINE";
+                }
+            } catch (error) {
+                alert("Gagal merubah status stream. Cek koneksi.");
+                btnElement.innerText = originalText;
+            } finally {
+                btnElement.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
 
