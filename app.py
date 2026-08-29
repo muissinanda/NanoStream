@@ -82,6 +82,7 @@ def start_ffmpeg(path, source_url):
     cmd = [
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
+        "-timeout", "10000000",
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "-i", source_url,
         "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
