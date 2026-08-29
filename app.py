@@ -348,8 +348,8 @@ def get_logs(path: str):
     if os.path.exists(log_path):
         with open(log_path, "r") as f:
             lines = f.readlines()
-            return PlainTextResponse("".join(lines[-50:]))
-    return PlainTextResponse("Log not found.")
+            return Response(content="".join(lines[-50:]), media_type="text/plain")
+    return Response(content="Log not found.", media_type="text/plain")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
