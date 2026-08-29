@@ -81,7 +81,6 @@ def start_ffmpeg(path, source_url):
     # Mengubah audio menjadi AAC (transcode audio) memakan CPU <1% namun menjamin 100% kompatibel dengan HLS/VLC. Video tetap copy.
     cmd = [
         "ffmpeg", "-y", 
-        "-probesize", "1000000", "-analyzeduration", "1000000",
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "-i", source_url,
@@ -297,7 +296,7 @@ def proxy_hls(path: str, filename: str, request: Request):
         url += f"?{query}"
         
     try:
-        r = requests.get(url, stream=True, timeout=10)
+        r = requests.get(url, stream=True, timeout=30)
         
         # [OBFUSCATION] Manipulasi Playlist .m3u8 agar Cloudflare mengira ini file text/json biasa
         if real_filename.endswith(".m3u8"):
@@ -338,7 +337,7 @@ def proxy_hls(path: str, filename: str, request: Request):
             
         return StreamingResponse(iterfile(), headers=headers, status_code=r.status_code)
     except Exception as e:
-        return {"error": str(e)}
+        return Response(content=f"Upstream Timeout/Error: {str(e)}", status_code=504)
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
