@@ -20,6 +20,21 @@ VALID_USERNAME = "muis24"
 VALID_PASSWORD = "master123"
 DB_FILE = "channels.json"
 
+SETTINGS_FILE = "settings.json"
+
+def load_settings():
+    if not os.path.exists(SETTINGS_FILE):
+        return {"proxy": ""}
+    try:
+        with open(SETTINGS_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {"proxy": ""}
+
+def save_settings(data):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
 # Global state for stream processes
 # mapping path (e.g. 'hbo') to subprocess
 processes = {}
@@ -78,19 +93,28 @@ def start_ffmpeg(path, source_url):
         processes[path].terminate()
         processes[path].wait()
     
+    settings = load_settings()
+    proxy = settings.get("proxy", "").strip()
+    
     # Mengubah audio menjadi AAC (transcode audio) memakan CPU <1% namun menjamin 100% kompatibel dengan HLS/VLC. Video tetap copy.
     cmd = [
         "ffmpeg", "-y", 
         "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
         "-rw_timeout", "15000000",
-        "-timeout", "10000000",
+        "-timeout", "10000000"
+    ]
+    
+    if proxy:
+        cmd.extend(["-http_proxy", proxy])
+        
+    cmd.extend([
         "-user_agent", "IPTVSmartersPro",
         "-i", source_url,
         "-map", "0:v:0?", "-map", "0:a:0?",
         "-c:v", "copy", "-c:a", "aac", "-ac", "2", "-b:a", "128k",
         "-max_muxing_queue_size", "1024",
         "-f", "rtsp", "-rtsp_transport", "tcp", f"rtsp://127.0.0.1:8554/{path}"
-    ]
+    ])
     
     # Menyimpan log untuk proses ini (agar mudah di debug jika gagal)
     log_file = open(f"/opt/nanostreamer/log_{path}.txt", "w")
@@ -125,6 +149,23 @@ async def logout():
     response.delete_cookie("session")
     return response
 
+@app.post("/settings/proxy")
+def update_proxy(request: Request, proxy: str = Form("")):
+    if not check_auth(request):
+        return RedirectResponse(url="/")
+    
+    settings = load_settings()
+    settings["proxy"] = proxy.strip()
+    save_settings(settings)
+    
+    # Restart all active streams to apply proxy
+    db = load_db()
+    for path, ch in db.items():
+        if ch.get("is_active", False):
+            start_ffmpeg(path, ch["source"])
+            
+    return RedirectResponse(url="/dashboard", status_code=303)
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     if not check_auth(request):
@@ -140,10 +181,14 @@ async def dashboard(request: Request):
     if not local_ip:
         local_ip = "127.0.0.1"
 
+    settings = load_settings()
+    current_proxy = settings.get("proxy", "")
+
     context = {
         "request": request,
         "channels": db,
-        "local_ip": local_ip
+        "local_ip": local_ip,
+        "current_proxy": current_proxy
     }
     return templates.TemplateResponse("dashboard.html", context)
 
